@@ -1,12 +1,13 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 21
+    // this is where I think I'm having problems...
+    compileSdkVersion 21 // 21 is lollipop
     buildToolsVersion "21.1.2"
 
     defaultConfig {
         applicationId "com.cmpt381.tybie.interactionproject381"
-        minSdkVersion 19
+        minSdkVersion 19 // 19 is kitkat
         targetSdkVersion 21
         versionCode 1
         versionName "1.0"
