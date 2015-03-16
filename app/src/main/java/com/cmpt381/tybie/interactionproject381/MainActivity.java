@@ -1,26 +1,50 @@
 package com.cmpt381.tybie.interactionproject381;
 
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 
 
+/**
+ * Main Activity functions as the controller
+ */
 public class MainActivity extends ActionBarActivity {
+
+    protected ImageView picture;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        RelativeLayout root = new RelativeLayout(this);
+        root.setVerticalGravity(RelativeLayout.CENTER_VERTICAL);
+        root.setHorizontalGravity(RelativeLayout.CENTER_HORIZONTAL);
+        RelativeLayout.LayoutParams params =
+                new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT);
+        params.addRule(RelativeLayout.CENTER_VERTICAL);
+        params.addRule(RelativeLayout.CENTER_HORIZONTAL);
 
 
-        ImageView v = (ImageView) findViewById(R.id.imageView);
+        // get the model resources and set up the model
+        String [] imageNames = {"sample", "sample2"};
+        int [] imageIds = new int[imageNames.length];
+        for (int i = 0; i < imageNames.length; i++) {
+            imageIds[i] = this.getResources().getIdentifier(imageNames[i], "drawable", this.getPackageName());
+        }
+        Model model = new Model(imageNames, imageIds);
 
+        picture = new ImageView(this);
+        //model.next();
+        picture.setImageResource(model.getCurrentId());
+        picture.setLayoutParams(params);
 
-
-
-        setContentView(R.layout.activity_main);
+        root.addView(picture);
+        setContentView(root);
     }
 
 
