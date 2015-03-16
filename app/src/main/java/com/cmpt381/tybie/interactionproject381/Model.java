@@ -8,13 +8,65 @@ import java.util.ArrayList;
  */
 public class Model {
 
-    public ArrayList<String> images;
+    protected ArrayList<ImageResource> images;
+    protected ImageResource current;
+    protected int idx;
 
-    public Model() {
+    /**
+     * Create the model with the given input names and ids
+     * @param names - the list of image file names (without extensions)
+     * @param ids - identifying codes for images, used to set imageView contents in main
+     */
+    public Model(String [] names, int [] ids) {
+
         images = new ArrayList<>();
 
-        // add files *WITHOUT* extensions
-        images.add("sample");
+        for (int i = 0; i < names.length; i++){
+            ImageResource r = new ImageResource(names[i], ids[i]);
+            images.add(r);
+        }
+
+        this.current = images.get(0);
+        this.idx = 0;
+    }
+
+
+    /**
+     * Move to the next image in the list, and return the new current image
+     * @return the current ImageResource
+     */
+    public ImageResource next(){
+       if (this.idx < images.size()){
+           this.idx += 1;
+           this.current = images.get(this.idx);
+           return this.current;
+       }
+       else {
+           return null;
+       }
+    }
+
+    /**
+     * Move to the previous image in the list, and return the new current image
+     * @return the current ImageResource
+     */
+    public ImageResource prev(){
+        if (this.idx == 0){
+            return null;
+        }
+        else{
+            this.idx -= 1;
+            this.current = images.get(this.idx);
+            return this.current;
+        }
+    }
+
+    /**
+     * Get the resource id of the currently selected resource
+     * @return the id of the current image resource item
+     */
+    public int getCurrentId(){
+        return this.current.id;
     }
 
 }
