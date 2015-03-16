@@ -4,13 +4,17 @@ import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 
+import static android.view.View.OnClickListener;
+
 
 /**
- * Main Activity functions as the controller
+ * Main Activity functions as the view and controller, programmatically creating
+ * view components, and providing controller functions for event handling
  */
 public class MainActivity extends ActionBarActivity {
 
@@ -36,12 +40,17 @@ public class MainActivity extends ActionBarActivity {
         for (int i = 0; i < imageNames.length; i++) {
             imageIds[i] = this.getResources().getIdentifier(imageNames[i], "drawable", this.getPackageName());
         }
-        Model model = new Model(imageNames, imageIds);
+        final Model model = new Model(imageNames, imageIds);
 
         picture = new ImageView(this);
-        //model.next();
         picture.setImageResource(model.getCurrentId());
         picture.setLayoutParams(params);
+        picture.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View e) {
+                tempClick(picture, model);
+            }
+        });
 
         root.addView(picture);
         setContentView(root);
@@ -69,4 +78,23 @@ public class MainActivity extends ActionBarActivity {
 
         return super.onOptionsItemSelected(item);
     }
+
+    /**
+     * Extra controller functions
+     */
+
+
+    /**
+     * Temporary click handler to switch between images and test model implementation
+     */
+    public static void tempClick(ImageView v, Model m){
+        // test model next()
+        //m.next();
+
+        //test model prev()
+        m.prev();
+        v.setImageResource(m.getCurrentId());
+    }
+
+
 }
