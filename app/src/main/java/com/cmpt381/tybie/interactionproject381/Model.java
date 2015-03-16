@@ -13,7 +13,8 @@ public class Model {
     public Model() {
         images = new ArrayList<>();
 
-        images.add("sample.jpg");
+        // add files *WITHOUT* extensions
+        images.add("sample");
     }
 
 }
