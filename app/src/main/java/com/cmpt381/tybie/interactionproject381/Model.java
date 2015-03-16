@@ -33,32 +33,34 @@ public class Model {
 
     /**
      * Move to the next image in the list, and return the new current image
+     * If at the end, wrap to the start
      * @return the current ImageResource
      */
     public ImageResource next(){
-       if (this.idx < images.size()){
+       if (this.idx < images.size() - 1){
            this.idx += 1;
-           this.current = images.get(this.idx);
-           return this.current;
        }
        else {
-           return null;
+           this.idx = 0;
        }
+       this.current = images.get(this.idx);
+       return this.current;
     }
 
     /**
      * Move to the previous image in the list, and return the new current image
+     * If at the start, wrap around to the end
      * @return the current ImageResource
      */
     public ImageResource prev(){
         if (this.idx == 0){
-            return null;
+            this.idx = this.images.size() - 1;
         }
         else{
             this.idx -= 1;
-            this.current = images.get(this.idx);
-            return this.current;
         }
+        this.current = images.get(this.idx);
+        return this.current;
     }
 
     /**
