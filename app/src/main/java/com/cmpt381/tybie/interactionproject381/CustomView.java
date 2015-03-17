@@ -32,5 +32,7 @@ public class CustomView extends RelativeLayout {
         this.easyExitListener = eventListener;
     }
 
+    public void
+
 
 }
