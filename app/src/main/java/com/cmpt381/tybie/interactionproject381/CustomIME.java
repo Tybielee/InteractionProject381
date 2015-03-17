@@ -1,19 +1,19 @@
 package com.cmpt381.tybie.interactionproject381;
 
 import android.inputmethodservice.InputMethodService;
-import android.view.View;
 
 /**
  * Created by taylorsummach on 15-03-17.
- * The Class for the EasyExit interaction
+ * The Class for the custom interactions
  */
 public class CustomIME extends InputMethodService {
 
-    protected View screen;
+    protected CustomView screen;
 
     @Override
-    public View onCreateInputView(){
-        this.screen = getLayoutInflater().inflate(R.layout.custom_ime, null);
+    public CustomView onCreateInputView(){
+        this.screen = (CustomView) getLayoutInflater().inflate(R.layout.custom_ime, null);
+
         return this.screen;
     }
 

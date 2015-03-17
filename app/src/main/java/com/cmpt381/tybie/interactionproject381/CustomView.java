@@ -11,7 +11,7 @@ import android.widget.RelativeLayout;
 public class CustomView extends RelativeLayout {
     private final Context context;
     private View v;
-    private OnEasyExitEventListener easyExitListener;
+    public OnEasyExitEventListener easyExitListener;
     // add more listeners here for other events
     // also need to add an interface etc
 
@@ -37,5 +37,6 @@ public class CustomView extends RelativeLayout {
     public void setEasyExitEventListener(OnEasyExitEventListener eventListener){
         this.easyExitListener = eventListener;
     }
+
 
 }

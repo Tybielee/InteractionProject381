@@ -6,6 +6,7 @@ package com.cmpt381.tybie.interactionproject381;
  */
 public interface OnEasyExitEventListener {
 
+    // onEvent must be implemented
     public void onEvent();
 }
 
