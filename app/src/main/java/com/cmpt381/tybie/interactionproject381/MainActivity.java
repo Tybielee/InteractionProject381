@@ -4,12 +4,12 @@ import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
-
-import static android.view.View.OnClickListener;
+import android.widget.TextView;
 
 
 /**
@@ -19,12 +19,13 @@ import static android.view.View.OnClickListener;
 public class MainActivity extends ActionBarActivity {
 
     protected ImageView picture;
+    protected CustomView root;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        RelativeLayout root = new RelativeLayout(this);
+        CustomView root = new CustomView(this);
         root.setVerticalGravity(RelativeLayout.CENTER_VERTICAL);
         root.setHorizontalGravity(RelativeLayout.CENTER_HORIZONTAL);
         RelativeLayout.LayoutParams params =
@@ -32,6 +33,10 @@ public class MainActivity extends ActionBarActivity {
                         ViewGroup.LayoutParams.MATCH_PARENT);
         params.addRule(RelativeLayout.CENTER_VERTICAL);
         params.addRule(RelativeLayout.CENTER_HORIZONTAL);
+
+
+        final TextView t = new TextView(this);
+        t.setText("No events yet...");
 
 
         // get the model resources and set up the model
@@ -45,13 +50,37 @@ public class MainActivity extends ActionBarActivity {
         picture = new ImageView(this);
         picture.setImageResource(model.getCurrentId());
         picture.setLayoutParams(params);
+        /**
         picture.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View e) {
                 tempClick(picture, model);
             }
         });
+        */
 
+        // add and test the custom EasyExit view and event
+        root.setEasyExitEventListener(new OnEasyExitEventListener() {
+            @Override
+            public void onEvent() {
+                tempClick(picture,model);
+            }
+        });
+
+        /**
+         * use a touch listener to get events...
+         * maybe need something additional for more complex actions?
+         */
+        root.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent e) {
+                CustomView cv = (CustomView) v;
+                boolean r = interpret(cv,e);
+                return r;
+            }
+        });
+
+        root.addView(t);
         root.addView(picture);
         setContentView(root);
     }
@@ -80,8 +109,29 @@ public class MainActivity extends ActionBarActivity {
     }
 
     /**
-     * Extra controller functions
+     * Controller functions
      */
+
+
+    /**
+     * Interpret a motion event, and decide which custom action to perform
+     * @param v pass in the custom, root view
+     * @param e pass in a motion event
+     * @return whether or not the event was consumed/handled properly
+     */
+    public static boolean interpret(CustomView v, MotionEvent e){
+
+        /** if this event is an easy exit, and this event has an easy
+         * exit listener already set up, then call the easyExitListener event
+         */
+        if (e.getAction() == MotionEvent.ACTION_DOWN){
+            if (v.easyExitListener != null){
+                v.easyExitListener.onEvent();
+                return true;
+            }
+        }
+        return false;
+    }
 
 
     /**
@@ -89,12 +139,14 @@ public class MainActivity extends ActionBarActivity {
      */
     public static void tempClick(ImageView v, Model m){
         // test model next()
-        //m.next();
+        m.next();
 
         //test model prev()
-        m.prev();
+        //m.prev();
         v.setImageResource(m.getCurrentId());
     }
+
+
 
 
 }
