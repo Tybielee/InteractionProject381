@@ -25,9 +25,6 @@ public class MainActivity extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        //CustomIME rootIME = new CustomIME();
-        //root = rootIME.onCreateInputView();
-
         CustomView root = new CustomView(this);
         root.setVerticalGravity(RelativeLayout.CENTER_VERTICAL);
         root.setHorizontalGravity(RelativeLayout.CENTER_HORIZONTAL);

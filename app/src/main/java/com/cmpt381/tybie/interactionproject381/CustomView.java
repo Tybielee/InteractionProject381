@@ -24,12 +24,6 @@ public class CustomView extends RelativeLayout {
         this.context = c;
     }
 
-    // add the required methods to properly extend relative layout
-    @Override
-    protected void onFinishInflate(){
-        this.v = findViewById(R.id.main_view);
-    }
-
     /**
      * set the easyExitListener of the view to the passed in event
      * @param eventListener, the custom event being passed in
