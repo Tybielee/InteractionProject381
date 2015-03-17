@@ -8,6 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 
 import static android.view.View.OnClickListener;
 
@@ -24,7 +25,7 @@ public class MainActivity extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        RelativeLayout root = new RelativeLayout(this);
+        CustomView root = new CustomView(this);
         root.setVerticalGravity(RelativeLayout.CENTER_VERTICAL);
         root.setHorizontalGravity(RelativeLayout.CENTER_HORIZONTAL);
         RelativeLayout.LayoutParams params =
@@ -32,6 +33,10 @@ public class MainActivity extends ActionBarActivity {
                         ViewGroup.LayoutParams.MATCH_PARENT);
         params.addRule(RelativeLayout.CENTER_VERTICAL);
         params.addRule(RelativeLayout.CENTER_HORIZONTAL);
+
+
+        final TextView t = new TextView(this);
+        t.setText("No events yet...");
 
 
         // get the model resources and set up the model
@@ -52,6 +57,16 @@ public class MainActivity extends ActionBarActivity {
             }
         });
 
+        // add and test the custom EasyExit view and event
+        CustomView ex = new CustomView(this);
+        ex.setEasyExitEventListener(new OnEasyExitEventListener() {
+            @Override
+            public void onEvent() {
+                t.setText("Custom Event Detected");
+            }
+        });
+
+        root.addView(t);
         root.addView(picture);
         setContentView(root);
     }
@@ -95,6 +110,8 @@ public class MainActivity extends ActionBarActivity {
         m.prev();
         v.setImageResource(m.getCurrentId());
     }
+
+
 
 
 }

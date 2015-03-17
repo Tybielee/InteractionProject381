@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- a custom layout for a full screen view to accept EasyExit input events -->
+<com.cmpt381.tybie.interactionproject381.CustomView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/main_view">
+    </RelativeLayout>
+
+
+</com.cmpt381.tybie.interactionproject381.CustomView>
+
