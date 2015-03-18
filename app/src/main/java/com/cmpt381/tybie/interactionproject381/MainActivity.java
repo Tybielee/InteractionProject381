@@ -46,28 +46,14 @@ public class MainActivity extends ActionBarActivity {
         for (int i = 0; i < imageNames.length; i++) {
             imageIds[i] = this.getResources().getIdentifier(imageNames[i], "drawable", this.getPackageName());
         }
+
         final Model model = new Model(imageNames, imageIds);
+        final Controller controller = new Controller(model);
 
         picture = new ImageView(this);
         picture.setImageResource(model.getCurrentId());
         picture.setLayoutParams(params);
-        /**
-        picture.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View e) {
-                tempClick(picture, model);
-            }
-        });
-        */
 
-        // add and test the custom EasyExit view and event
-        root.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent e) {
-                tempClick(picture, model);
-                return true;
-            }
-        });
 
         /**
          * use a touch listener to get events...
@@ -76,8 +62,7 @@ public class MainActivity extends ActionBarActivity {
         root.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent e) {
-                RelativeLayout cv = (RelativeLayout) v;
-                boolean r = interpret(cv,e);
+                boolean r = controller.interpret(picture,e);
                 return r;
             }
         });
@@ -109,46 +94,4 @@ public class MainActivity extends ActionBarActivity {
 
         return super.onOptionsItemSelected(item);
     }
-
-    /**
-     * Controller functions
-     */
-
-
-    /**
-     * Interpret a motion event, and decide which custom action to perform
-     * @param v pass in the custom, root view
-     * @param e pass in a motion event
-     * @return whether or not the event was consumed/handled properly
-     */
-    public static boolean interpret(View v, MotionEvent e){
-
-        /** if this event is an easy exit, and this event has an easy
-         * exit listener already set up, then call the easyExitListener event
-         */
-        if (e.getAction() == MotionEvent.ACTION_DOWN){
-            //if (v.easyExitListener != null){
-            //    v.easyExitListener.onEvent();
-            //    return true;
-            //}
-        }
-        return false;
-    }
-
-
-    /**
-     * Temporary click handler to switch between images and test model implementation
-     */
-    public static void tempClick(ImageView v, Model m){
-        // test model next()
-        m.next();
-
-        //test model prev()
-        //m.prev();
-        v.setImageResource(m.getCurrentId());
-    }
-
-
-
-
 }
