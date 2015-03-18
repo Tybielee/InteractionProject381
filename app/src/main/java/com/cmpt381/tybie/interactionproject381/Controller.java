@@ -7,7 +7,7 @@ import android.widget.ImageView;
  * Created by taylorsummach on 15-03-17.
  * The Controller class for the application
  */
-public class Controller {
+public class Controller{
 
     public Model model;
 
@@ -48,4 +48,5 @@ public class Controller {
         //m.prev();
         v.setImageResource(this.model.getCurrentId());
     }
+
 }

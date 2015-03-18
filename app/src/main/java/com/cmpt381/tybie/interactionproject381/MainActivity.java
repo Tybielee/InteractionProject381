@@ -1,5 +1,8 @@
 package com.cmpt381.tybie.interactionproject381;
 
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
@@ -16,10 +19,22 @@ import android.widget.TextView;
  * Main Activity functions as the view and controller, programmatically creating
  * view components, and providing controller functions for event handling
  */
-public class MainActivity extends ActionBarActivity {
+public class MainActivity extends ActionBarActivity implements SensorEventListener{
+
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+        //TODO add the Sensor Stuff HERE
+        //although I might need to make the controller implement the sensor still unsure about that...
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {/*no need to worry about accuracy */ }
 
     protected ImageView picture;
     protected RelativeLayout root;
+
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,10 +82,34 @@ public class MainActivity extends ActionBarActivity {
             }
         });
 
+
         root.addView(t);
         root.addView(picture);
         setContentView(root);
     }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        //will need to add code to unregister the sensor here
+
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+
+
+
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+
+
+    }
+
 
 
     @Override
