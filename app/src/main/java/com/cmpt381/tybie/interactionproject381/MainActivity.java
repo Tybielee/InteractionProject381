@@ -1,9 +1,12 @@
 package com.cmpt381.tybie.interactionproject381;
 
+import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.os.Vibrator;
 import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -21,20 +24,31 @@ import android.widget.TextView;
  */
 public class MainActivity extends ActionBarActivity implements SensorEventListener{
 
-    @Override
-    public void onSensorChanged(SensorEvent event) {
-        //TODO add the Sensor Stuff HERE
-        //although I might need to make the controller implement the sensor still unsure about that...
-    }
+    private float lastX, lastY, lastZ;
 
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {/*no need to worry about accuracy */ }
+    private SensorManager sensorManager;
+    private Sensor accelerometer;
+
+    private float deltaX = 0;
+    private float deltaY = 0;
+    private float deltaZ = 0;
+
+    private TextView DeltaX, LastX;
+
+    private float vibrateThreshold = 0;
+
+    public Vibrator v;
 
     protected ImageView picture;
     protected RelativeLayout root;
 
+    protected Controller controller = null;
 
 
+    public void initializeViews() {
+        DeltaX = new TextView(getApplicationContext());
+        LastX = new TextView(getApplicationContext());
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,6 +67,8 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
 
         final TextView t = new TextView(this);
         t.setText("No events yet...");
+        initializeViews();
+
 
 
         // get the model resources and set up the model
@@ -63,7 +79,24 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         }
 
         final Model model = new Model(imageNames, imageIds);
-        final Controller controller = new Controller(model);
+        //changed this because I need to access the controller outside the code in a different function
+        //I know thats bad, but I can try to change that later if it needs to be
+        //possible ideas include passsing along the values of the sensorManager to the controller perhaps along with whatever else is needed.
+        controller = new Controller(model);
+
+        sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        if (sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) != null) {
+            // success! we have an accelerometer
+
+            accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+            sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+            vibrateThreshold = accelerometer.getMaximumRange() / 2;
+        } else {
+            // fail! we dont have an accelerometer!
+        }
+
+        //initialize vibration
+        v = (Vibrator) this.getSystemService(Context.VIBRATOR_SERVICE);
 
         picture = new ImageView(this);
         picture.setImageResource(model.getCurrentId());
@@ -83,16 +116,74 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         });
 
 
-        root.addView(t);
+        //root.addView(t);
+        root.addView(DeltaX);
+      //  root.addView(LastX);
         root.addView(picture);
         setContentView(root);
     }
 
     @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
+    }
+
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+
+
+        DeltaX.setText("DeltaX: " + Float.toString(deltaX));
+        LastX.setText("LastX: " + Float.toString(lastX));
+
+        // get the change of the x,y,z values of the accelerometer
+        deltaX = lastX - event.values[0];
+        deltaY = Math.abs(lastY - event.values[1]);
+        deltaZ = Math.abs(lastZ - event.values[2]);
+
+        // if the change is below 2, it is just plain noise
+        if (deltaX < 0.5)
+            //deltaX = 0;
+            controller.moveToPrevImage(picture);
+        else if (deltaX > 0.5) {
+            controller.moveToNextImage(picture);
+        }
+        if (deltaY < 2)
+            deltaY = 0;
+        if (deltaZ < 2)
+            deltaZ = 0;
+
+        // set the last know values of x,y,z
+
+        lastY = event.values[1];
+        lastX = event.values[0];
+        lastZ = event.values[2];
+
+
+        //vibrate();
+
+    }
+
+
+    // if the change in the accelerometer value is big enough, then vibrate!
+    // our threshold is MaxValue/2
+    public void vibrate() {
+        if ((deltaX > vibrateThreshold) || (deltaY > vibrateThreshold) || (deltaZ > vibrateThreshold)) {
+            v.vibrate(50);
+        }
+    }
+
+    @Override
     public void onResume() {
         super.onResume();
-        //will need to add code to unregister the sensor here
+        sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
 
+    }
+
+    //onPause() unregister the accelerometer for stop listening the events\
+    @Override
+    protected void onPause() {
+        super.onPause();
+        sensorManager.unregisterListener(this);
     }
 
     @Override

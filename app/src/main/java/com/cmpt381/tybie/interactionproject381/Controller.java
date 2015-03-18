@@ -40,13 +40,16 @@ public class Controller{
     }
 
 
-    public void temp(ImageView v, MotionEvent e){
-        // test model next()
+    public void moveToNextImage(ImageView v){
         this.model.next();
-
-        //test model prev()
-        //m.prev();
         v.setImageResource(this.model.getCurrentId());
     }
+
+    public void moveToPrevImage(ImageView v)
+    {
+        this.model.prev();
+        v.setImageResource(this.model.getCurrentId());
+    }
+
 
 }
