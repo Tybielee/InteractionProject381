@@ -40,9 +40,6 @@ public class Model {
        if (this.idx < images.size() - 1){
            this.idx += 1;
        }
-       else {
-           this.idx = 0;
-       }
        this.current = images.get(this.idx);
        return this.current;
     }
@@ -54,7 +51,7 @@ public class Model {
      */
     public ImageResource prev(){
         if (this.idx == 0){
-            this.idx = this.images.size() - 1;
+            this.idx = this.idx;
         }
         else{
             this.idx -= 1;

@@ -89,7 +89,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
             // success! we have an accelerometer
 
             accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-            sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+            sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_UI);
             vibrateThreshold = accelerometer.getMaximumRange() / 2;
         } else {
             // fail! we dont have an accelerometer!
@@ -132,20 +132,27 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
     public void onSensorChanged(SensorEvent event) {
 
 
-        DeltaX.setText("DeltaX: " + Float.toString(deltaX));
+
         LastX.setText("LastX: " + Float.toString(lastX));
 
         // get the change of the x,y,z values of the accelerometer
         deltaX = lastX - event.values[0];
+
+
+        float threshold = Math.abs(lastX-event.values[0]);
+
+        DeltaX.setText("DeltaX: " + Float.toString(deltaX)+"thresh: "+threshold);
         deltaY = Math.abs(lastY - event.values[1]);
         deltaZ = Math.abs(lastZ - event.values[2]);
 
         // if the change is below 2, it is just plain noise
-        if (deltaX < 0.5)
-            //deltaX = 0;
+        if (deltaX > 2 && threshold > 0.08){
             controller.moveToPrevImage(picture);
-        else if (deltaX > 0.5) {
+            deltaX=0;
+            }
+        else if (deltaX < -2 && threshold > 0.08) {
             controller.moveToNextImage(picture);
+            deltaX=0;
         }
         if (deltaY < 2)
             deltaY = 0;
