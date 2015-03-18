@@ -41,7 +41,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         super.onCreate(savedInstanceState);
 
         // CustomLayout is pretty much a relative layout + a
-        RelativeLayout root = new RelativeLayout(this);
+        root = new RelativeLayout(this);
         root.setVerticalGravity(RelativeLayout.CENTER_VERTICAL);
         root.setHorizontalGravity(RelativeLayout.CENTER_HORIZONTAL);
         RelativeLayout.LayoutParams params =
@@ -49,6 +49,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
                         ViewGroup.LayoutParams.MATCH_PARENT);
         params.addRule(RelativeLayout.CENTER_VERTICAL);
         params.addRule(RelativeLayout.CENTER_HORIZONTAL);
+
 
 
         final TextView t = new TextView(this);
@@ -77,11 +78,9 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         root.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent e) {
-                boolean r = controller.interpret(picture,e);
-                return r;
+                return controller.interpret(picture,e,t);
             }
         });
-
 
         root.addView(t);
         root.addView(picture);
