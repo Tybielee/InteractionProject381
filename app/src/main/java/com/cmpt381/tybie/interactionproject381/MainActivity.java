@@ -19,13 +19,14 @@ import android.widget.TextView;
 public class MainActivity extends ActionBarActivity {
 
     protected ImageView picture;
-    protected CustomView root;
+    protected RelativeLayout root;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        CustomView root = new CustomView(this);
+        // CustomLayout is pretty much a relative layout + a
+        RelativeLayout root = new RelativeLayout(this);
         root.setVerticalGravity(RelativeLayout.CENTER_VERTICAL);
         root.setHorizontalGravity(RelativeLayout.CENTER_HORIZONTAL);
         RelativeLayout.LayoutParams params =
@@ -60,10 +61,11 @@ public class MainActivity extends ActionBarActivity {
         */
 
         // add and test the custom EasyExit view and event
-        root.setEasyExitEventListener(new OnEasyExitEventListener() {
+        root.setOnTouchListener(new View.OnTouchListener() {
             @Override
-            public void onEvent() {
-                tempClick(picture,model);
+            public boolean onTouch(View v, MotionEvent e) {
+                tempClick(picture, model);
+                return true;
             }
         });
 
@@ -74,7 +76,7 @@ public class MainActivity extends ActionBarActivity {
         root.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent e) {
-                CustomView cv = (CustomView) v;
+                RelativeLayout cv = (RelativeLayout) v;
                 boolean r = interpret(cv,e);
                 return r;
             }
@@ -119,16 +121,16 @@ public class MainActivity extends ActionBarActivity {
      * @param e pass in a motion event
      * @return whether or not the event was consumed/handled properly
      */
-    public static boolean interpret(CustomView v, MotionEvent e){
+    public static boolean interpret(View v, MotionEvent e){
 
         /** if this event is an easy exit, and this event has an easy
          * exit listener already set up, then call the easyExitListener event
          */
         if (e.getAction() == MotionEvent.ACTION_DOWN){
-            if (v.easyExitListener != null){
-                v.easyExitListener.onEvent();
-                return true;
-            }
+            //if (v.easyExitListener != null){
+            //    v.easyExitListener.onEvent();
+            //    return true;
+            //}
         }
         return false;
     }
