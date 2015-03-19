@@ -12,7 +12,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
-import android.widget.TextView;
 
 
 /**
@@ -41,7 +40,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         super.onCreate(savedInstanceState);
 
         // CustomLayout is pretty much a relative layout + a
-        RelativeLayout root = new RelativeLayout(this);
+        root = new RelativeLayout(this);
         root.setVerticalGravity(RelativeLayout.CENTER_VERTICAL);
         root.setHorizontalGravity(RelativeLayout.CENTER_HORIZONTAL);
         RelativeLayout.LayoutParams params =
@@ -49,11 +48,6 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
                         ViewGroup.LayoutParams.MATCH_PARENT);
         params.addRule(RelativeLayout.CENTER_VERTICAL);
         params.addRule(RelativeLayout.CENTER_HORIZONTAL);
-
-
-        final TextView t = new TextView(this);
-        t.setText("No events yet...");
-
 
         // get the model resources and set up the model
         String [] imageNames = {"sample", "sample2"};
@@ -69,7 +63,6 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         picture.setImageResource(model.getCurrentId());
         picture.setLayoutParams(params);
 
-
         /**
          * use a touch listener to get events...
          * maybe need something additional for more complex actions?
@@ -77,13 +70,10 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         root.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent e) {
-                boolean r = controller.interpret(picture,e);
-                return r;
+                return controller.interpret(picture,e);
             }
         });
 
-
-        root.addView(t);
         root.addView(picture);
         setContentView(root);
     }
