@@ -107,4 +107,16 @@ public class Controller{
     }
 
 
+    public void moveToNextImage(ImageView v){
+        this.model.next();
+        v.setImageResource(this.model.getCurrentId());
+    }
+    public void moveToPrevImage(ImageView v)
+    {
+        this.model.prev();
+        v.setImageResource(this.model.getCurrentId());
+    }
+
+
+
 }
