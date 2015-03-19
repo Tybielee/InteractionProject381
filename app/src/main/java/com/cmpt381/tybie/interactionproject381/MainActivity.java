@@ -64,7 +64,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         initializeViews();
 
         // get the model resources and set up the model
-        String [] imageNames = {"sample2", "sample"};
+        String [] imageNames = {"sample2", "sample", "sample3"};
         int [] imageIds = new int[imageNames.length];
         for (int i = 0; i < imageNames.length; i++) {
             imageIds[i] = this.getResources().getIdentifier(imageNames[i], "drawable", this.getPackageName());
