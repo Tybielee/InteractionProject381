@@ -17,6 +17,8 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import java.util.ArrayList;
+
 
 /**
  * Main Activity functions as the view and controller, programmatically creating
@@ -62,7 +64,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         initializeViews();
 
         // get the model resources and set up the model
-        String [] imageNames = {"sample2", "sample"};
+        String [] imageNames = {"sample2", "sample", "sample3"};
         int [] imageIds = new int[imageNames.length];
         for (int i = 0; i < imageNames.length; i++) {
             imageIds[i] = this.getResources().getIdentifier(imageNames[i], "drawable", this.getPackageName());
@@ -100,7 +102,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
             }
         });
 
-        root.addView(DeltaX);
+        //root.addView(DeltaX);
         // root.addView(LastX);
         root.addView(picture);
         setContentView(root);
@@ -111,29 +113,15 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
 
     }
 
+    ArrayList<Float> xValues = new ArrayList<Float>();
     @Override
     public void onSensorChanged(SensorEvent event) {
 
-        LastX.setText("LastX: " + Float.toString(lastX));
+        xValues.add(event.values[0]);
 
-        // get the change of the x,y,z values of the accelerometer
-        deltaX = lastX - event.values[0];
-
-        float threshold = Math.abs(lastX-event.values[0]);
-
-        DeltaX.setText("DeltaX: " + Float.toString(deltaX)+"thresh: "+threshold);
         deltaY = Math.abs(lastY - event.values[1]);
         deltaZ = Math.abs(lastZ - event.values[2]);
 
-        // if the change is below 2, it is just plain noise
-        if (deltaX > 2 && threshold > 0.08){
-            controller.moveToPrevImage(picture);
-            deltaX=0;
-        }
-        else if (deltaX < -2 && threshold > 0.08) {
-            controller.moveToNextImage(picture);
-            deltaX=0;
-        }
 
         if (deltaY < 2)
             deltaY = 0;
@@ -141,11 +129,31 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
             deltaZ = 0;
 
         // set the last know values of x,y,z
+
         lastY = event.values[1];
         lastX = event.values[0];
         lastZ = event.values[2];
 
+        movePictures();
         //vibrate();
+
+    }
+
+    public void movePictures()
+    {
+        if (xValues.size() == 3) {
+            // get the change of the x,y,z values of the accelerometer
+            deltaX = (xValues.get(0)+xValues.get(1)+xValues.get(2))/3;
+
+            xValues.clear();
+            // if the change is below 2, it is just plain noise
+            if (deltaX > 1){
+                controller.moveToPrevImage(picture);
+            }
+            else if (deltaX < -1) {
+                controller.moveToNextImage(picture);
+            }
+        }
     }
 
     // if the change in the accelerometer value is big enough, then vibrate!
