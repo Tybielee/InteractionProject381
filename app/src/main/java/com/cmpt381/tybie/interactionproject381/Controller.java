@@ -21,7 +21,7 @@ public class Controller{
     private boolean isCenterSet;
     private int centerX;
     private int centerY;
-    private final static int VARIANCE = 70;
+    private final static int VARIANCE = 100;
 
     // tools for gauging length of touch events
     private boolean touchStarted;
@@ -102,6 +102,7 @@ public class Controller{
                 }
             }
         }
+        //TODO add a timeout for waiting for the second exit touch
         return false;
     }
 

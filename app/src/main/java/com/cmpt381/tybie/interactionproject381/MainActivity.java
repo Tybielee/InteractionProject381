@@ -50,7 +50,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         params.addRule(RelativeLayout.CENTER_HORIZONTAL);
 
         // get the model resources and set up the model
-        String [] imageNames = {"sample", "sample2"};
+        String [] imageNames = {"sample2", "sample"};
         int [] imageIds = new int[imageNames.length];
         for (int i = 0; i < imageNames.length; i++) {
             imageIds[i] = this.getResources().getIdentifier(imageNames[i], "drawable", this.getPackageName());
@@ -62,6 +62,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         picture = new ImageView(this);
         picture.setImageResource(model.getCurrentId());
         picture.setLayoutParams(params);
+
 
         /**
          * use a touch listener to get events...
