@@ -64,15 +64,11 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         params.addRule(RelativeLayout.CENTER_VERTICAL);
         params.addRule(RelativeLayout.CENTER_HORIZONTAL);
 
-
-        final TextView t = new TextView(this);
-        t.setText("No events yet...");
         initializeViews();
 
-
-
         // get the model resources and set up the model
-        String [] imageNames = {"sample", "sample2"};
+        String [] imageNames = {"image1", "image2", "image3", "image4", "image5", "image6", "image7",
+            "image8", "image9", "image10", "image11", "image12", "image13"};
         int [] imageIds = new int[imageNames.length];
         for (int i = 0; i < imageNames.length; i++) {
             imageIds[i] = this.getResources().getIdentifier(imageNames[i], "drawable", this.getPackageName());
@@ -116,8 +112,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         });
 
 
-        //root.addView(t);
-        root.addView(DeltaX);
+      //  root.addView(DeltaX);
       //  root.addView(LastX);
         root.addView(picture);
         setContentView(root);
