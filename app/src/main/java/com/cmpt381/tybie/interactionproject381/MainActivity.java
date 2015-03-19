@@ -17,8 +17,6 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import java.util.ArrayList;
-
 
 /**
  * Main Activity functions as the view and controller, programmatically creating
@@ -27,31 +25,37 @@ import java.util.ArrayList;
 public class MainActivity extends ActionBarActivity implements SensorEventListener{
 
     private float lastX, lastY, lastZ;
+
     private SensorManager sensorManager;
     private Sensor accelerometer;
+
     private float deltaX = 0;
     private float deltaY = 0;
     private float deltaZ = 0;
+
     private TextView DeltaX, LastX;
+
     private float vibrateThreshold = 0;
+
     public Vibrator v;
+
     protected ImageView picture;
     protected RelativeLayout root;
-    protected Controller controller;
+
+    protected Controller controller = null;
+
 
     public void initializeViews() {
         DeltaX = new TextView(getApplicationContext());
         LastX = new TextView(getApplicationContext());
     }
 
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         // CustomLayout is pretty much a relative layout + a
-        root = new RelativeLayout(this);
+        RelativeLayout root = new RelativeLayout(this);
         root.setVerticalGravity(RelativeLayout.CENTER_VERTICAL);
         root.setHorizontalGravity(RelativeLayout.CENTER_HORIZONTAL);
         RelativeLayout.LayoutParams params =
@@ -60,24 +64,30 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         params.addRule(RelativeLayout.CENTER_VERTICAL);
         params.addRule(RelativeLayout.CENTER_HORIZONTAL);
 
-        // initialize the views
+
+        final TextView t = new TextView(this);
+        t.setText("No events yet...");
         initializeViews();
 
+
+
         // get the model resources and set up the model
-        String [] imageNames = {"image1", "image2", "image3", "image4", "image5",
-            "image6", "image7", "image8", "image9", "image10", "image11",
-            "image12", "image13"};
+        String [] imageNames = {"sample", "sample2"};
         int [] imageIds = new int[imageNames.length];
         for (int i = 0; i < imageNames.length; i++) {
             imageIds[i] = this.getResources().getIdentifier(imageNames[i], "drawable", this.getPackageName());
         }
 
         final Model model = new Model(imageNames, imageIds);
+        //changed this because I need to access the controller outside the code in a different function
+        //I know thats bad, but I can try to change that later if it needs to be
+        //possible ideas include passsing along the values of the sensorManager to the controller perhaps along with whatever else is needed.
         controller = new Controller(model);
 
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         if (sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) != null) {
             // success! we have an accelerometer
+
             accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
             sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_UI);
             vibrateThreshold = accelerometer.getMaximumRange() / 2;
@@ -100,12 +110,15 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         root.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent e) {
-                return controller.interpret(picture,e);
+                boolean r = controller.interpret(picture,e);
+                return r;
             }
         });
 
-        //root.addView(DeltaX);
-        // root.addView(LastX);
+
+        //root.addView(t);
+        root.addView(DeltaX);
+      //  root.addView(LastX);
         root.addView(picture);
         setContentView(root);
     }
@@ -115,16 +128,32 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
 
     }
 
-    ArrayList<Float> xValues = new ArrayList<Float>();
     @Override
     public void onSensorChanged(SensorEvent event) {
 
-        xValues.add(event.values[0]);
 
+
+        LastX.setText("LastX: " + Float.toString(lastX));
+
+        // get the change of the x,y,z values of the accelerometer
+        deltaX = lastX - event.values[0];
+
+
+        float threshold = Math.abs(lastX-event.values[0]);
+
+        DeltaX.setText("DeltaX: " + Float.toString(deltaX)+"thresh: "+threshold);
         deltaY = Math.abs(lastY - event.values[1]);
         deltaZ = Math.abs(lastZ - event.values[2]);
 
-
+        // if the change is below 2, it is just plain noise
+        if (deltaX > 2 && threshold > 0.08){
+            controller.moveToPrevImage(picture);
+            deltaX=0;
+            }
+        else if (deltaX < -2 && threshold > 0.08) {
+            controller.moveToNextImage(picture);
+            deltaX=0;
+        }
         if (deltaY < 2)
             deltaY = 0;
         if (deltaZ < 2)
@@ -136,27 +165,11 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         lastX = event.values[0];
         lastZ = event.values[2];
 
-        movePictures();
+
         //vibrate();
 
     }
 
-    public void movePictures()
-    {
-        if (xValues.size() == 3) {
-            // get the change of the x,y,z values of the accelerometer
-            deltaX = (xValues.get(0)+xValues.get(1)+xValues.get(2))/3;
-
-            xValues.clear();
-            // if the change is below 2, it is just plain noise
-            if (deltaX > 1){
-                controller.moveToPrevImage(picture);
-            }
-            else if (deltaX < -1) {
-                controller.moveToNextImage(picture);
-            }
-        }
-    }
 
     // if the change in the accelerometer value is big enough, then vibrate!
     // our threshold is MaxValue/2
@@ -166,17 +179,26 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         }
     }
 
-
     @Override
     public void onResume() {
         super.onResume();
         sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+
+    }
+
+    //onPause() unregister the accelerometer for stop listening the events\
+    @Override
+    protected void onPause() {
+        super.onPause();
+        sensorManager.unregisterListener(this);
     }
 
     @Override
     public void onStop() {
         super.onStop();
-        sensorManager.unregisterListener(this);
+
+
+
     }
 
     @Override
@@ -185,8 +207,6 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
 
 
     }
-
-
 
 
 
