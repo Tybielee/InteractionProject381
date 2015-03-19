@@ -54,7 +54,11 @@ public class Model {
      */
     public ImageResource prev(){
         if (this.idx == 0){
-            this.idx = this.images.size() - 1;
+            // for wrapping
+            //this.idx = this.images.size() - 1;
+
+            // for no wrapping
+            this.idx = 0;
         }
         else{
             this.idx -= 1;
