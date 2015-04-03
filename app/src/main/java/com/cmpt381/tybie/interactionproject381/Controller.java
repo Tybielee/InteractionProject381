@@ -29,6 +29,10 @@ public class Controller{
     private boolean exitTouchWait;
     private boolean secondTouchStarted;
 
+    //variable to hold the rotation values
+    public int rotation = 0;
+
+
     public Controller(Model m){
         this.model = m;
         this.touchStarted = false;
@@ -108,13 +112,27 @@ public class Controller{
 
 
     public void moveToNextImage(ImageView v){
+
         this.model.next();
         v.setImageResource(this.model.getCurrentId());
+        resetRotation(v);
     }
     public void moveToPrevImage(ImageView v)
     {
         this.model.prev();
         v.setImageResource(this.model.getCurrentId());
+        resetRotation(v);
+    }
+    public void rotateLeft(ImageView v){
+        rotation-=90;
+        v.setRotation(rotation);
+    }
+    public void rotateRight(ImageView v){
+        rotation+=90;
+        v.setRotation(rotation);
+    }
+    public void resetRotation(ImageView v){
+        v.setRotation(0);
     }
 
 

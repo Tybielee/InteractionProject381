@@ -6,7 +6,6 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
-import android.os.Vibrator;
 import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -15,7 +14,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
-import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 
@@ -26,23 +25,23 @@ import java.util.ArrayList;
  */
 public class MainActivity extends ActionBarActivity implements SensorEventListener{
 
-    private float lastX, lastY, lastZ;
+
     private SensorManager sensorManager;
     private Sensor accelerometer;
+    private Sensor mRotationSensor;
     private float deltaX = 0;
-    private float deltaY = 0;
-    private float deltaZ = 0;
-    private TextView DeltaX, LastX;
-    private float vibrateThreshold = 0;
-    public Vibrator v;
+    private float changeInRoll = 0, changeInPitch = 0;
     protected ImageView picture;
     protected RelativeLayout root;
     protected Controller controller;
+    ArrayList<Float> xValues = new ArrayList<Float>();
+    ArrayList<Float> rollValues = new ArrayList<Float>();
+    ArrayList<Float> pitchValues = new ArrayList<Float>();
+    private boolean rotateMode = true;
 
-    public void initializeViews() {
-        DeltaX = new TextView(getApplicationContext());
-        LastX = new TextView(getApplicationContext());
-    }
+    private static final int SENSOR_DELAY_ROTATE = 500 * 1000; // 500ms
+    private static final int SENSOR_DELAY_TILT = 300 * 1000; // 300ms
+    private static final int FROM_RADS_TO_DEGS = -57;
 
 
 
@@ -60,13 +59,11 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         params.addRule(RelativeLayout.CENTER_VERTICAL);
         params.addRule(RelativeLayout.CENTER_HORIZONTAL);
 
-        // initialize the views
-        initializeViews();
-
         // get the model resources and set up the model
         String [] imageNames = {"image1", "image2", "image3", "image4", "image5",
             "image6", "image7", "image8", "image9", "image10", "image11",
-            "image12", "image13"};
+            "image12", "image13", "sample3"};
+        //String [] imageNames = {"image1"};
         int [] imageIds = new int[imageNames.length];
         for (int i = 0; i < imageNames.length; i++) {
             imageIds[i] = this.getResources().getIdentifier(imageNames[i], "drawable", this.getPackageName());
@@ -76,17 +73,19 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         controller = new Controller(model);
 
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        if (sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) != null) {
-            // success! we have an accelerometer
+        try {
             accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-            sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_UI);
-            vibrateThreshold = accelerometer.getMaximumRange() / 2;
-        } else {
-            // fail! we dont have an accelerometer!
+            sensorManager.registerListener(this, accelerometer, SENSOR_DELAY_TILT);
+        } catch (Exception e) {
+            Toast.makeText(this, "Accelerometer compatibility issue", Toast.LENGTH_LONG).show();
+        }
+        try {
+            mRotationSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
+            sensorManager.registerListener(this, mRotationSensor, SENSOR_DELAY_ROTATE);
+        } catch (Exception e) {
+            Toast.makeText(this, "Rotation compatibility issue", Toast.LENGTH_LONG).show();
         }
 
-        //initialize vibration
-        v = (Vibrator) this.getSystemService(Context.VIBRATOR_SERVICE);
 
         picture = new ImageView(this);
         picture.setImageResource(model.getCurrentId());
@@ -104,68 +103,100 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
             }
         });
 
-        //root.addView(DeltaX);
-        // root.addView(LastX);
         root.addView(picture);
         setContentView(root);
     }
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
-
+        //needed function for sensors but do not need to implemenet
     }
 
-    ArrayList<Float> xValues = new ArrayList<Float>();
+
     @Override
     public void onSensorChanged(SensorEvent event) {
+        if (event.sensor == mRotationSensor) {
+            rotateMode = true;
+            if (event.values.length > 4) {
+                float[] truncatedRotationVector = new float[4];
+                System.arraycopy(event.values, 0, truncatedRotationVector, 0, 4);
+                update(truncatedRotationVector);
+            } else {
+                update(event.values);
+            }
+        }
+        else if (event.sensor == accelerometer && !rotateMode){
 
-        xValues.add(event.values[0]);
-
-        deltaY = Math.abs(lastY - event.values[1]);
-        deltaZ = Math.abs(lastZ - event.values[2]);
-
-
-        if (deltaY < 2)
-            deltaY = 0;
-        if (deltaZ < 2)
-            deltaZ = 0;
-
-        // set the last know values of x,y,z
-
-        lastY = event.values[1];
-        lastX = event.values[0];
-        lastZ = event.values[2];
-
-        movePictures();
-        //vibrate();
-
+            xValues.add(event.values[0]);
+            navigatePictures();
+        }
     }
 
-    public void movePictures()
+    //function that grabs all the rotation values that are needed in order to determine rotate
+    private void update(float[] vectors) {
+        float[] rotationMatrix = new float[9];
+        SensorManager.getRotationMatrixFromVector(rotationMatrix, vectors);
+        int worldAxisX = SensorManager.AXIS_X;
+        int worldAxisZ = SensorManager.AXIS_Z;
+        float[] adjustedRotationMatrix = new float[9];
+        SensorManager.remapCoordinateSystem(rotationMatrix, worldAxisX, worldAxisZ, adjustedRotationMatrix);
+        float[] orientation = new float[3];
+        SensorManager.getOrientation(adjustedRotationMatrix, orientation);
+        pitchValues.add(orientation[1] * FROM_RADS_TO_DEGS);
+        rollValues.add(orientation[2] * FROM_RADS_TO_DEGS);
+        rotatePictures();
+    }
+
+    //function to navigate through the photos
+    private void navigatePictures()
     {
         if (xValues.size() == 3) {
             // get the change of the x,y,z values of the accelerometer
             deltaX = (xValues.get(0)+xValues.get(1)+xValues.get(2))/3;
-
             xValues.clear();
-            // if the change is below 2, it is just plain noise
+
             if (deltaX > 1){
                 controller.moveToPrevImage(picture);
             }
             else if (deltaX < -1) {
                 controller.moveToNextImage(picture);
             }
+
         }
     }
 
-    // if the change in the accelerometer value is big enough, then vibrate!
-    // our threshold is MaxValue/2
-    public void vibrate() {
-        if ((deltaX > vibrateThreshold) || (deltaY > vibrateThreshold) || (deltaZ > vibrateThreshold)) {
-            v.vibrate(50);
+    /*
+        Rotating pictures happens in one way. On any photo, if you tilt the device forward, the photo will rotate to the left
+        This is because of how many sensor events are sent to the OnSensorChanged function, at one time you could be grabbing the tilting sensor
+        and the next time you take the rotation vectors.
+     */
+    public void rotatePictures()
+    {
+        if (rollValues.size() == 3)
+        {
+            changeInRoll = (rollValues.get(0)+rollValues.get(1)+rollValues.get(2))/3;
+            changeInPitch = (pitchValues.get(0)+pitchValues.get(1)+pitchValues.get(2))/3;
+            //used for testing and debugging purposes
+            System.out.println("roll: "+changeInRoll);
+            System.out.println("pitch: "+changeInPitch);
+
+            //clear the values in the array for the next sensors
+            rollValues.clear();
+            pitchValues.clear();
+            //this now really only rotates left because of how the sensors are taken and to have a more clean looking interaction
+            //otherwise the interaction is very buggy
+            //example if you rotate the device to the right it will both go to the next photo and rotate but when you move to the next photo the imageView resets to the initial view
+            if (changeInRoll > 25)
+            {
+                controller.rotateLeft(picture);
+            }
+            else if (changeInRoll < -25)
+            {
+                controller.rotateRight(picture);
+            }
+            rotateMode = false;
         }
     }
-
 
     @Override
     public void onResume() {
@@ -182,13 +213,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
     @Override
     public void onDestroy() {
         super.onDestroy();
-
-
     }
-
-
-
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
