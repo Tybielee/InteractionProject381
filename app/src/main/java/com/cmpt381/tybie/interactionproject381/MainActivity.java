@@ -14,6 +14,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -70,7 +71,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         }
 
         final Model model = new Model(imageNames, imageIds);
-        controller = new Controller(model);
+        controller = new Controller(this,model);
 
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         try {
@@ -91,6 +92,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         picture.setImageResource(model.getCurrentId());
         picture.setLayoutParams(params);
 
+        final TextView t = new TextView(this);
 
         /**
          * use a touch listener to get events...
@@ -99,10 +101,13 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         root.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent e) {
+                t.setText("x: " + e.getX() + " y: " + e.getY());
                 return controller.interpret(picture,e);
+
             }
         });
 
+        root.addView(t);
         root.addView(picture);
         setContentView(root);
     }
