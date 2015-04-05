@@ -12,6 +12,9 @@ public class Model {
     protected ImageResource current;
     protected int idx;
 
+    public double CURRENT_SCALE = 1.0; //adjust when scaling
+    public final double DEFAULT_SCALE = 1.0;
+
     /**
      * Create the model with the given input names and ids
      * @param names - the list of image file names (without extensions)
@@ -40,7 +43,6 @@ public class Model {
        if (this.idx < images.size() - 1){
            this.idx += 1;
        }
-
        this.current = images.get(this.idx);
        return this.current;
     }
@@ -51,14 +53,7 @@ public class Model {
      * @return the current ImageResource
      */
     public ImageResource prev(){
-        if (this.idx == 0){
-            // for wrapping
-            //this.idx = this.images.size() - 1;
-
-            // for no wrapping
-            this.idx = 0;
-        }
-        else{
+        if (this.idx > 0){
             this.idx -= 1;
         }
         this.current = images.get(this.idx);
