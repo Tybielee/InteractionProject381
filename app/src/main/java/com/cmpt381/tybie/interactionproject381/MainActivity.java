@@ -149,57 +149,58 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
     public void onSensorChanged(SensorEvent event) {
         if (event.sensor == mRotationSensor) {
             // if touch is down, actually zoom instead of rotate
-            picture.setOnTouchListener(new View.OnTouchListener() {
-                @Override
-                public boolean onTouch(View v, MotionEvent e) {
-                    if (waitForExit){
-                        rotateMode = false;
-                        zoomMode = false;
+                picture.setOnTouchListener(new View.OnTouchListener() {
+                    @Override
+                    public boolean onTouch(View v, MotionEvent e) {
+                        if (waitForExit) {
+                            rotateMode = false;
+                            zoomMode = false;
 
-                        rollValues.clear();
-                        pitchValues.clear();
+                            rollValues.clear();
+                            pitchValues.clear();
 
-                        return controller.interpret(picture, e);
+                            return controller.interpret(picture, e);
 
-                    }
-
-                    if (e.getAction() == MotionEvent.ACTION_DOWN){
-                        rotateMode = false;
-                        zoomMode = true;
-                    }
-                    if (e.getAction() == MotionEvent.ACTION_UP){
-                        rotateMode = true;
-                        zoomMode = false;
-                    }
-
-                    centerX = v.getWidth()/2;
-                    centerY = v.getHeight()/2;
-
-                    if (Math.abs(e.getX() - centerX) < Controller.VARIANCE) {
-                        if (Math.abs(e.getY() - centerY) < Controller.VARIANCE){
-                            timer = System.currentTimeMillis();
-                            waitForExit = true;
                         }
-                    }
 
-                    if (waitForExit && System.currentTimeMillis() - timer > Controller.TIMEOUT){
-                        waitForExit = false;
-                        timer = System.currentTimeMillis();
-                    }
+                        if (e.getAction() == MotionEvent.ACTION_DOWN) {
+                            rotateMode = false;
+                            zoomMode = true;
+                        }
+                        if (e.getAction() == MotionEvent.ACTION_UP) {
+                            zoomMode = false;
+                            rotateMode = true;
+                        }
 
-                    return false;
+                        centerX = v.getWidth() / 2;
+                        centerY = v.getHeight() / 2;
+
+                        if (Math.abs(e.getX() - centerX) < Controller.VARIANCE) {
+                            if (Math.abs(e.getY() - centerY) < Controller.VARIANCE) {
+                                timer = System.currentTimeMillis();
+                                waitForExit = true;
+                            }
+                        }
+
+                        if (waitForExit && System.currentTimeMillis() - timer > Controller.TIMEOUT) {
+                            waitForExit = false;
+                            timer = System.currentTimeMillis();
+                        }
+
+                        return true;
+                    }
+                });
+
+                if (event.values.length > 4) {
+                    float[] truncatedRotationVector = new float[4];
+                    System.arraycopy(event.values, 0, truncatedRotationVector, 0, 4);
+                    update(truncatedRotationVector);
+                } else {
+                    update(event.values);
                 }
-            });
 
-            if (event.values.length > 4) {
-                float[] truncatedRotationVector = new float[4];
-                System.arraycopy(event.values, 0, truncatedRotationVector, 0, 4);
-                update(truncatedRotationVector);
-            } else {
-                update(event.values);
-            }
         }
-        else if (event.sensor == accelerometer && !rotateMode){
+        else if (event.sensor == accelerometer && (!rotateMode || !zoomMode)){
             xValues.add(event.values[0]);
             navigatePictures();
         }
@@ -218,13 +219,14 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         pitchValues.add(orientation[1] * FROM_RADS_TO_DEGS);
         rollValues.add(orientation[2] * FROM_RADS_TO_DEGS);
 
-        if (rotateMode) {
-            Log.i("update", "rotating picture");
-            rotatePictures();
-        }
-        else if (zoomMode){
+        if (zoomMode) {
             Log.i("update", "zooming picture");
             zoomPicture();
+
+        }
+        else {
+            Log.i("update", "rotating picture");
+            rotatePictures();
         }
     }
 
@@ -266,11 +268,11 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
             //this now really only rotates left because of how the sensors are taken and to have a more clean looking interaction
             //otherwise the interaction is very buggy
             //example if you rotate the device to the right it will both go to the next photo and rotate but when you move to the next photo the imageView resets to the initial view
-            if (changeInPitch > 15)
+            if (changeInRoll > 25 && changeInRoll < 150)
             {
                 controller.rotateLeft(picture);
             }
-            else if (changeInPitch < -15)
+            else if (changeInRoll < -25 && changeInRoll >-85)
             {
                 controller.rotateRight(picture);
             }
