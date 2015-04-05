@@ -7,6 +7,7 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -35,15 +36,22 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
     protected ImageView picture;
     protected RelativeLayout root;
     protected Controller controller;
-    ArrayList<Float> xValues = new ArrayList<Float>();
-    ArrayList<Float> rollValues = new ArrayList<Float>();
-    ArrayList<Float> pitchValues = new ArrayList<Float>();
+    protected Model model;
+    ArrayList<Float> xValues = new ArrayList<>();
+    ArrayList<Float> rollValues = new ArrayList<>();
+    ArrayList<Float> pitchValues = new ArrayList<>();
     private boolean rotateMode = true;
+    private boolean zoomMode = true;
+
+    private long timer;
+    private boolean waitForExit;
+    private int centerX;
+    private int centerY;
+
 
     private static final int SENSOR_DELAY_ROTATE = 500 * 1000; // 500ms
     private static final int SENSOR_DELAY_TILT = 300 * 1000; // 300ms
     private static final int FROM_RADS_TO_DEGS = -57;
-
 
 
     @Override
@@ -60,6 +68,8 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         params.addRule(RelativeLayout.CENTER_VERTICAL);
         params.addRule(RelativeLayout.CENTER_HORIZONTAL);
 
+        picture = new ImageView(this);
+
         // get the model resources and set up the model
         String [] imageNames = {"image1", "image2", "image3", "image4", "image5",
             "image6", "image7", "image8", "image9", "image10", "image11",
@@ -70,8 +80,13 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
             imageIds[i] = this.getResources().getIdentifier(imageNames[i], "drawable", this.getPackageName());
         }
 
-        final Model model = new Model(imageNames, imageIds);
-        controller = new Controller(this,model);
+        model = new Model(imageNames, imageIds);
+        controller = new Controller(model,picture);
+
+        picture.setImageResource(model.getCurrentId());
+        picture.setLayoutParams(params);
+
+        waitForExit = false;
 
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         try {
@@ -87,11 +102,6 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
             Toast.makeText(this, "Rotation compatibility issue", Toast.LENGTH_LONG).show();
         }
 
-
-        picture = new ImageView(this);
-        picture.setImageResource(model.getCurrentId());
-        picture.setLayoutParams(params);
-
         final TextView t = new TextView(this);
 
         /**
@@ -101,9 +111,26 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         root.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent e) {
-                t.setText("x: " + e.getX() + " y: " + e.getY());
-                return controller.interpret(picture,e);
+                centerX = v.getWidth()/2;
+                centerY = v.getHeight()/2;
 
+                if (waitForExit) {
+                    return controller.interpret(picture, e);
+                }
+
+                if (Math.abs(e.getX() - centerX) < Controller.VARIANCE) {
+                    if (Math.abs(e.getY() - centerY) < Controller.VARIANCE){
+                        timer = System.currentTimeMillis();
+                        waitForExit = true;
+                    }
+                }
+
+                if (waitForExit && System.currentTimeMillis() - timer > Controller.TIMEOUT){
+                    waitForExit = false;
+                    timer = System.currentTimeMillis();
+                }
+
+                return false;
             }
         });
 
@@ -121,7 +148,49 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
     @Override
     public void onSensorChanged(SensorEvent event) {
         if (event.sensor == mRotationSensor) {
-            rotateMode = true;
+            // if touch is down, actually zoom instead of rotate
+            picture.setOnTouchListener(new View.OnTouchListener() {
+                @Override
+                public boolean onTouch(View v, MotionEvent e) {
+                    if (waitForExit){
+                        rotateMode = false;
+                        zoomMode = false;
+
+                        rollValues.clear();
+                        pitchValues.clear();
+
+                        return controller.interpret(picture, e);
+
+                    }
+
+                    if (e.getAction() == MotionEvent.ACTION_DOWN){
+                        rotateMode = false;
+                        zoomMode = true;
+                    }
+                    if (e.getAction() == MotionEvent.ACTION_UP){
+                        rotateMode = true;
+                        zoomMode = false;
+                    }
+
+                    centerX = v.getWidth()/2;
+                    centerY = v.getHeight()/2;
+
+                    if (Math.abs(e.getX() - centerX) < Controller.VARIANCE) {
+                        if (Math.abs(e.getY() - centerY) < Controller.VARIANCE){
+                            timer = System.currentTimeMillis();
+                            waitForExit = true;
+                        }
+                    }
+
+                    if (waitForExit && System.currentTimeMillis() - timer > Controller.TIMEOUT){
+                        waitForExit = false;
+                        timer = System.currentTimeMillis();
+                    }
+
+                    return false;
+                }
+            });
+
             if (event.values.length > 4) {
                 float[] truncatedRotationVector = new float[4];
                 System.arraycopy(event.values, 0, truncatedRotationVector, 0, 4);
@@ -131,7 +200,6 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
             }
         }
         else if (event.sensor == accelerometer && !rotateMode){
-
             xValues.add(event.values[0]);
             navigatePictures();
         }
@@ -149,7 +217,15 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         SensorManager.getOrientation(adjustedRotationMatrix, orientation);
         pitchValues.add(orientation[1] * FROM_RADS_TO_DEGS);
         rollValues.add(orientation[2] * FROM_RADS_TO_DEGS);
-        rotatePictures();
+
+        if (rotateMode) {
+            Log.i("update", "rotating picture");
+            rotatePictures();
+        }
+        else if (zoomMode){
+            Log.i("update", "zooming picture");
+            zoomPicture();
+        }
     }
 
     //function to navigate through the photos
@@ -177,31 +253,74 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
      */
     public void rotatePictures()
     {
-        if (rollValues.size() == 3)
+        if (rollValues.size() >= 3)
         {
-            changeInRoll = (rollValues.get(0)+rollValues.get(1)+rollValues.get(2))/3;
-            changeInPitch = (pitchValues.get(0)+pitchValues.get(1)+pitchValues.get(2))/3;
+            int x = rollValues.size();
+            int a = x - 3, b = x - 2, c = x -1;
+            // get the average change over the last three measurements
+            changeInRoll = (rollValues.get(a)+rollValues.get(b)+rollValues.get(c))/3;
+            changeInPitch = (pitchValues.get(a)+pitchValues.get(b)+pitchValues.get(c))/3;
             //used for testing and debugging purposes
-            System.out.println("roll: "+changeInRoll);
-            System.out.println("pitch: "+changeInPitch);
+            Log.i("Rotate", "roll: "+changeInRoll + " pitch: "+changeInPitch);
 
-            //clear the values in the array for the next sensors
-            rollValues.clear();
-            pitchValues.clear();
             //this now really only rotates left because of how the sensors are taken and to have a more clean looking interaction
             //otherwise the interaction is very buggy
             //example if you rotate the device to the right it will both go to the next photo and rotate but when you move to the next photo the imageView resets to the initial view
-            if (changeInRoll > 25)
+            if (changeInPitch > 15)
             {
                 controller.rotateLeft(picture);
             }
-            else if (changeInRoll < -25)
+            else if (changeInPitch < -15)
             {
                 controller.rotateRight(picture);
             }
             rotateMode = false;
+
+            //clear the values in the array for the next sensors
+            rollValues.clear();
+            pitchValues.clear();
+        }
+        else if (rollValues.size() > 3){
+            rollValues.clear();
+            pitchValues.clear();
         }
     }
+
+    public void zoomPicture(){
+        Log.i("zoom", "roll values size = " + rollValues.size());
+        if (rollValues.size() >= 3)
+        {
+            int x = rollValues.size();
+            int a = x - 3, b = x - 2, c = x -1;
+            // get the average change over the last three measurements
+            changeInRoll = (rollValues.get(a)+rollValues.get(b)+rollValues.get(c))/3;
+            changeInPitch = (pitchValues.get(a)+pitchValues.get(b)+pitchValues.get(c))/3;
+            //used for testing and debugging purposes
+            Log.i("Zoom", "roll: "+changeInRoll + " pitch: "+changeInPitch);
+
+            //this now really only rotates left because of how the sensors are taken and to have a more clean looking interaction
+            //otherwise the interaction is very buggy
+            //example if you rotate the device to the right it will both go to the next photo and rotate but when you move to the next photo the imageView resets to the initial view
+            if (changeInPitch > 15)
+            {
+                controller.zoomOut();
+            }
+            else if (changeInPitch < -15)
+            {
+                controller.zoomIn();
+            }
+            zoomMode = false;
+
+            rollValues.clear();
+            pitchValues.clear();
+        }
+        else if (rollValues.size() > 3){
+            rollValues.clear();
+            pitchValues.clear();
+        }
+    }
+
+
 
     @Override
     public void onResume() {

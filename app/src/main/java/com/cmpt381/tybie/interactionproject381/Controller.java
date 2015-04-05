@@ -1,12 +1,8 @@
 package com.cmpt381.tybie.interactionproject381;
 
-import android.content.Context;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.widget.ImageView;
-import android.widget.Toast;
-
-import javax.security.auth.login.LoginException;
 
 /**
  * Created by taylorsummach on 15-03-17.
@@ -14,8 +10,10 @@ import javax.security.auth.login.LoginException;
  */
 public class Controller{
 
-    private Context context;
-    public Model model;
+    private Model model;
+    private ImageView picture;
+
+
 
     /** 2000 ms for an extra long screen press to activate the
      * easy exit event
@@ -27,7 +25,7 @@ public class Controller{
     private boolean isCenterSet;
     private int centerX;
     private int centerY;
-    private final static int VARIANCE = 100;
+    public final static int VARIANCE = 100;
 
     // tools for gauging length of touch events
     private boolean touchStarted;
@@ -36,15 +34,16 @@ public class Controller{
     private boolean secondTouchStarted;
     private long starttime;
     private long currenttime;
-    private final static long TIMEOUT = 10000;
+    public final static long TIMEOUT = 10000;
 
     //variable to hold the rotation values
     public int rotation = 0;
 
 
-    public Controller(Context c, Model m){
-        this.context = c;
+    public Controller(Model m, ImageView v){
         this.model = m;
+        this.picture = v;
+        Log.i("Controller", "Picture is " + picture);
         this.touchStarted = false;
         this.exitTouchWait = false;
         this.secondTouchStarted = false;
@@ -53,19 +52,17 @@ public class Controller{
 
     /**
      * Interpret a motion event, and decide which custom action to perform
-     * @param v pass in the custom, root view
+     * @param v pass in the custom, root picture
      * @param e pass in a motion event
      * @return whether or not the event was consumed/handled properly
      */
     public boolean interpret(ImageView v, MotionEvent e){
-
 
         if (!this.isCenterSet) {
             this.centerX = (v.getWidth() / 2);
             this.centerY = (v.getHeight() / 2);
             this.isCenterSet = true;
         }
-
 
         /**
          * if this event is an easy exit, type, call the easy
@@ -93,11 +90,10 @@ public class Controller{
                     }
                     if (Math.abs(this.touchStartTime - this.currenttime) < EXTRA_LONG_PRESS_TIME){
                         // keep waiting for the event to happen
-                        Log.i("Controller", "Waiting for Long Press");
+                        //Log.i("Controller", "Waiting for Long Press");
                         return true;
                     }
                     else {
-                        Toast.makeText(this.context, "Swipe to Top Left and Hold for Exit", Toast.LENGTH_LONG).show();
                         Log.i("Controller", "Waiting for exit touch");
                         this.exitTouchWait = true;
                         return true;
@@ -120,7 +116,7 @@ public class Controller{
                         this.currenttime = System.currentTimeMillis();
                         if (Math.abs(this.touchStartTime - this.currenttime) < EXTRA_LONG_PRESS_TIME) {
                             // keep waiting
-                            Log.i("Controller", "Waiting for Final Long Press");
+                            //Log.i("Controller", "Waiting for Final Long Press");
                             return true;
                         }
                         else {
@@ -129,7 +125,6 @@ public class Controller{
                             this.touchStarted = false;
                             this.exitTouchWait = false;
                             Log.i("Controller", "Exiting now");
-                            Toast.makeText(this.context, "Exiting Now", Toast.LENGTH_LONG).show();
                             EasyExit.exit();
                         }
                     }
@@ -146,12 +141,18 @@ public class Controller{
 
         this.model.next();
         v.setImageResource(this.model.getCurrentId());
+        v.setScaleX((float) model.DEFAULT_SCALE);
+        v.setScaleY((float) model.DEFAULT_SCALE);
+        model.CURRENT_SCALE = model.DEFAULT_SCALE;
         resetRotation(v);
     }
     public void moveToPrevImage(ImageView v)
     {
         this.model.prev();
         v.setImageResource(this.model.getCurrentId());
+        v.setScaleX((float)model.DEFAULT_SCALE);
+        v.setScaleY((float)model.DEFAULT_SCALE);
+        model.CURRENT_SCALE = model.DEFAULT_SCALE;
         resetRotation(v);
     }
     public void rotateLeft(ImageView v){
@@ -168,10 +169,27 @@ public class Controller{
 
     public boolean isTimedOut(){
         this.currenttime = System.currentTimeMillis();
-        if ((this.currenttime - this.starttime) > TIMEOUT){
-            return true;
-        }
-        return false;
+        return (this.currenttime - this.starttime) > TIMEOUT;
     }
+
+    /**
+     * double the size of the image
+     */
+    public void zoomIn(){
+        model.CURRENT_SCALE += 0.25;
+
+        picture.setScaleX((float)model.CURRENT_SCALE);
+        picture.setScaleY((float) model.CURRENT_SCALE);
+    }
+
+    public void zoomOut(){
+        model.CURRENT_SCALE -= 0.25;
+
+        picture.setScaleX((float) model.CURRENT_SCALE);
+        picture.setScaleY((float) model.CURRENT_SCALE);
+    }
+
+
+
 
 }
