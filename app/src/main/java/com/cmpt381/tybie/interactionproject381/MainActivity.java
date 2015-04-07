@@ -257,22 +257,20 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
     {
         if (rollValues.size() >= 3)
         {
-            int x = rollValues.size();
-            int a = x - 3, b = x - 2, c = x -1;
             // get the average change over the last three measurements
-            changeInRoll = (rollValues.get(a)+rollValues.get(b)+rollValues.get(c))/3;
-            changeInPitch = (pitchValues.get(a)+pitchValues.get(b)+pitchValues.get(c))/3;
+            changeInRoll = (rollValues.get(0)+rollValues.get(1)+rollValues.get(2))/3;
+            changeInPitch = (pitchValues.get(0)+pitchValues.get(1)+pitchValues.get(2))/3;
             //used for testing and debugging purposes
             Log.i("Rotate", "roll: "+changeInRoll + " pitch: "+changeInPitch);
 
             //this now really only rotates left because of how the sensors are taken and to have a more clean looking interaction
             //otherwise the interaction is very buggy
             //example if you rotate the device to the right it will both go to the next photo and rotate but when you move to the next photo the imageView resets to the initial view
-            if (changeInRoll > 25 && changeInRoll < 150)
+            if (changeInRoll > 25)
             {
                 controller.rotateLeft(picture);
             }
-            else if (changeInRoll < -25 && changeInRoll >-85)
+            else if (changeInRoll < -25)
             {
                 controller.rotateRight(picture);
             }
@@ -307,7 +305,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
             {
                 controller.zoomOut();
             }
-            else if (changeInPitch < -15)
+            else if (changeInPitch < 15)
             {
                 controller.zoomIn();
             }
